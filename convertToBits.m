@@ -1,8 +1,8 @@
-function [mapping] = mapSymbolsToBits(modData,data )
+function [outputVector] = convertToBits(modData, data, prediction )
 %MAPSYMBOLSTOBITS Summary of this function goes here
 %   Detailed explanation goes here
 
-mapping = [];
+        mapping = [];
         possibleSymbols = unique(modData , 'first');
         
 %         mapSymbolsToBits
@@ -20,6 +20,17 @@ mapping = [];
                 end
                 index = index + 1;
             end
+        end
+        
+        % convert the symbols back into bits.
+        output_str = "";
+        for i = 1:size(prediction,1)
+            output_str = output_str + mapping(find(mapping == string(prediction(i))) + 1);
+        end
+        output_str = char(output_str);
+        outputVector = [];
+        for i = 1:ceil(size(data,1))
+            outputVector = [outputVector; str2num(output_str(i))];
         end
 
 

@@ -3,13 +3,18 @@ clear all;
 clc;
 
 i = sqrt(-1);
-SNR = 6;           % Signal-to-noise ratio (dB)
-rng default
+SNR = 6;
+rx = 2; 
+tx = 2;
 
+
+rng default
 hAWGN = comm.AWGNChannel(...
     'NoiseMethod','Signal to noise ratio (SNR)',...
     'SNR',SNR,...
     'SignalPower',1);
+
+
 
 %% Transmission
 
@@ -19,8 +24,6 @@ data_test = randi([0 1],numBits,1);
 numSymbols = 4;
 symbolSize = log2(numSymbols);
 
-
-
 for phase = 1:2
 %     phase
     if phase == 1 % We are generating training data
@@ -28,7 +31,7 @@ for phase = 1:2
     else
         data = data_test;
     end
-      
+    
     modData = [];
     recivedSymbols = [];
     recived = [];
@@ -37,13 +40,7 @@ for phase = 1:2
     for j = 1:2*symbolSize:length(data)
     
         % Modulate the data into symbols.
-            bits = char(string(data(j) + string(data(j + 1))));
-            n = bin2dec(bits);
-            x1 = exp(i*pi*((2*n+1)/numSymbols));
-            
-            bits = char(string(data(j + 2) + string(data(j + 3))));
-            n = bin2dec(bits);
-            x2 = exp(i*pi*((2*n+1)/numSymbols));
+            [x1, x2] = modulation(data, j, numSymbols);
             
             modData = [modData; [x1; x2]];
             modData_real = [real(modData); imag(modData)];
@@ -53,42 +50,26 @@ for phase = 1:2
             t2 = [conj(-x2); conj(x1)];
             
         % Transmission of the symbols
-
+        
             % channel matrix 
             scale = 0.75; % set the scale to use as well as the size of the H matrix.
-            h_rows = 2; 
-            h_columns = 2;
-            H = KnownChannelMatrixCreation(scale,h_rows,h_columns) ;
+            H = KnownChannelMatrixCreation(scale,rx,tx) ;
             
+            % Recieved values.
             R = [H*t1; conj(H*t2)];
-          
-            % noise
             R = step(hAWGN,R);
             
        % Channel estimation
-        
-        H_est = channelEstimation(R,t1,t2);
+            H_est = channelEstimation(R,t1,t2);
 
-       % Decoder     
-
-            H_bar = [conj(H_est(1,2)), -conj(H_est(1,1)); conj(H_est(2,2)), -conj(H_est(2,1))];
-            decoding_H = [H_est; H_bar];  
-            x_decoded = (inv(decoding_H' * decoding_H)* decoding_H')*R;
-            x_decoded(2) = conj(x_decoded(2));
-             
+       % Decoder    
+            x_decoded = decoder(H_est, R);
+            
             recivedSymbols = [recivedSymbols; x_decoded];
             x_estimate_real = [real(recivedSymbols); imag(recivedSymbols)];
             
             if phase == 2
-                
-                x_decoded(2) = conj(x_decoded(2));
-                x_estimate_real = [real(x_decoded); imag(x_decoded)];
-                estimate = predict(net,x_estimate_real);
-                
-                estimate_symbols = estimate(1) + estimate(3)*i;
-                prediction = [prediction; estimate_symbols];
-                
-                estimate_symbols = estimate(2) + estimate(4)*i;
+                estimate_symbols = blackBox(net, x_decoded);
                 prediction = [prediction; estimate_symbols];
             end
     end
@@ -100,37 +81,13 @@ for phase = 1:2
     end  
 end
 
-prediction - modData;
-
-
 %% convert back to bits
 
         % figure out which symbol maps to which bits.
-       
-       mapping =  mapSymbolsToBits(modData, data);
-
-
-
-        % convert the symbols back into bits.
-        output_str = "";
-        for i = 1:size(prediction,1)
-            output_str = output_str + mapping(find(mapping == string(prediction(i))) + 1);
-        end
-        output_str = char(output_str);
-
-
-        % convert from a string back into a vector.
-        outputVector = [];
-        for i = 1:ceil(size(data,1))
-            outputVector = [outputVector; str2num(output_str(i))];
-        end
+        outputVector =  convertToBits(modData, data, prediction);
 
         numberOfBitErrors = sum(abs(outputVector -  data))
-
         BER = numberOfBitErrors/size(data,1)
-        
-        
-        
         
       %%  Saving data to a file
 %      
