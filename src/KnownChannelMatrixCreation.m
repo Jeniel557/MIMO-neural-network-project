@@ -1,7 +1,7 @@
 function [H] = KnownChannelMatrixCreation(scale,h_rows,h_columns )
 %KNOWNCHANNELMATRIXCREATION Summary of this function goes here
 %   Detailed explanation goes here
-
+% not filtered, 
 h11 = raylrnd(scale);
 h22 = raylrnd(scale);
 h12 = raylrnd(scale);
