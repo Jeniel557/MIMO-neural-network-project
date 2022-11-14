@@ -16,3 +16,6 @@ ThreeIterations.m contains the code to run the Iterative approach with three ite
 ML_perfect_and_estimtaed.m contains the code for tradition MIMO signal detection using Maximum Likelihood detection. 
 This file contains two methods. One uses a perfect channel estimation, and the other uses a pilot symbol to estimate 
 the channel, recalculated ever 10 transmission, controlled by the pilotRecalculation variable.
+
+
+The non-Alamouti code can be found in the non-Alamouti folder under src
