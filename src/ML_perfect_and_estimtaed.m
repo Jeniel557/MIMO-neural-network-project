@@ -1,7 +1,7 @@
 close all;
 clear all;
 clc;
-% This is the main file for MAximun likeyhood with perfect H. Run this
+% This is the main file for Maximun likeyhood with perfect H. Run this
 % first.
 
 
@@ -9,11 +9,10 @@ i = sqrt(-1);
 
 numDiffererntSNRs = 6;
 snrData = zeros(8,2);
-% snrData(3,:) = 4
+
 rx = 2;
 tx = 2;
 
-% R_store =[];
 numBits = 1000000;
 numSymbols = 4;
 Rayscale = 0.5;
@@ -26,7 +25,7 @@ tableData = zeros(length(SNR), 3);
 tableDataCounter = 1;
 for snr = SNR
     snr
-    % SNR = 2;
+ 
     rng default
     hAWGN = comm.AWGNChannel(...
         'NoiseMethod','Signal to noise ratio (SNR)',...
@@ -124,12 +123,7 @@ end
         x_estimated(2) = argmax(x_decoded_estimate(2));
 
         % Training information storeage
-
-%         recivedSymbols = [recivedSymbols; x_decoded_estimate];
-%         estimatedSymbols_estiamted = [estimatedSymbols_estiamted; x_estimated];
         estimatedSymbols_estiamted(estimated_symbol_counter : estimated_symbol_counter +1) = x_estimated;
-        %         x_estimate_real = [real(recivedSymbols); imag(recivedSymbols)];
-
 
         % perfect decoding
         x_decoded_perfect= decoder(H_actual, R);
@@ -138,12 +132,9 @@ end
         x_estimated(1) = argmax(x_decoded_perfect(1));
         x_estimated(2) = argmax(x_decoded_perfect(2));
 
-%         estimatedSymbols_perfect = [estimatedSymbols_perfect; x_estimated];
+
         estimatedSymbols_perfect(estimated_symbol_counter : estimated_symbol_counter +1) = x_estimated;
-
         estimated_symbol_counter = estimated_symbol_counter + 2;
-
-
     end
 
 
@@ -167,16 +158,16 @@ end
 tableData
 display("Total times recalcualted is " + numTimesRecalc);
 
-% figure;
-% plot(X_total, 'xr','MarkerSize',15)
-% hold on;
-% plot(recivedSymbols,'ob')
-% xlim([-2 2])
-% ylim([-2 2])
-% xlabel("Real component")
-% ylabel("Imaginary component")
-% legend("Transmitted", "recieved")
-% title("Decoded vs transmitted symbol mapping")
+figure;
+plot(X_total, 'xr','MarkerSize',15)
+hold on;
+plot(recivedSymbols,'ob')
+xlim([-2 2])
+ylim([-2 2])
+xlabel("Real component")
+ylabel("Imaginary component")
+legend("Transmitted", "recieved")
+title("Decoded vs transmitted symbol mapping")
 
 figure;
 plot(X_total, 'xr','MarkerSize',15)

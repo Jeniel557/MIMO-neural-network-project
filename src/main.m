@@ -2,7 +2,7 @@ close all;
 clear all;
 clc;
 format long
-% This is the main file, dont run BBS or BBSoneNN
+% This is the main file, for the Black box and iterative appraoch
 
 
 i = sqrt(-1);
@@ -92,7 +92,7 @@ T_counter = 1;
 H_counter = 1;
 X_counter = 1;
 
-% disp("-----------------------------------------------")
+
 
 H_store = zeros((xSize*2),1);
 Hstore_counter = 1;
@@ -126,18 +126,15 @@ for j = 1:2*symbolSize:length(data)
     T = [t1_bar; t2_bar];
     
     % Training information storeage
-    %     H_store = [H_store; [H_actual(:,1);H_actual(:,2)]]
     H_store(Hstore_counter) =  H_actual(1,1);
     H_store(Hstore_counter+1) =  H_actual(2,1);
     H_store(Hstore_counter+ 2) =  H_actual(1,2);
     H_store(Hstore_counter + 3) =  H_actual(2,2);
     Hstore_counter = Hstore_counter + 4;
     
-    %     R_store = [R_store; R]
     R_store(rStore_counter : rStore_counter+3) = R;
     rStore_counter = rStore_counter + 4;
     
-    %      recivedSymbols = [recivedSymbols; x_decoded_hat]
     recivedSymbols(recivedSymbols_counter : recivedSymbols_counter + 1) = x_decoded_hat;
     recivedSymbols_counter = recivedSymbols_counter + 2;
     
@@ -152,15 +149,15 @@ display("end moduating data");
 display("Training nn1 ");
 tNN1 = tic;
 net = fitcnet(x_estimate_real, X_total_real,"LayerSizes",[10 10 10 10 10 10 6]);
-trainingTimeNN1 = toc(tNN1)
-display(trainingTimeNN1)
+trainingTimeNN1 = toc(tNN1);
+display("Time taken to train the first neural network is " + trainingTimeNN1+ " secs")
 
 input = [real(T_bar) ,imag(T_bar) , real(R_store), imag(R_store)];
 display("Training nn2 ");
 tnn2 = tic;
 CEnet = fitrnet(input, H_store,"LayerSizes",[10 10 10 10 10 10 10]);
-trainingTimeNN2 = toc(tnn2)
-display(trainingTimeNN2)
+trainingTimeNN2 = toc(tnn2);
+display("Time taken to train the second neural network is "+trainingTimeNN2 + "secs")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Testing
@@ -171,11 +168,11 @@ numBits = 4000;
 symbolSize;
 numSymbols;
 xTestSize = (numBits/symbolSize)
-SNR = [1:2:20];
+SNR = [1:2:20]; % set the specific SNR values to add to the data for test
 
 for snr = SNR
     disp("-----------------------------------------------");
-    snr
+    display(snr)
     rng default
     hAWGN = comm.AWGNChannel(...
         'NoiseMethod','Signal to noise ratio (SNR)',...
@@ -218,25 +215,18 @@ for snr = SNR
         T2_total_test(t1and2_counter : t1and2_counter + 1) = t2;
         t1and2_counter = t1and2_counter +2; 
         
-%         T1_total_test = [T1_total_test; t1];
-%         T2_total_test = [T2_total_test; t2];
         
-        % channel matrix
-        
+        % channel matrix     
         H_actual = KnownChannelMatrixCreation(Rayscale,rx,tx);
-%         H_total_test = [H_total_test ; H_actual];
         
         % Recieved values
         R = [H_actual*t1; (H_actual*t2)];
-%         T_total_test = [T_total_test ; R];
         T_total_test(t_total_test_counter :t_total_test_counter+  3) = R;
         t_total_test_counter = t_total_test_counter + 4;
         
     end
     
-    % disp("-----------------------------------------------");
     T_total_test = step(hAWGN,T_total_test);
-    
     T_counter = 1;
     H_counter = 1;
     X_counter = 1;
@@ -293,29 +283,18 @@ for snr = SNR
         x_bar_prime = [pred(1) + pred(3)*i; pred(2) + pred(4)*i];
         
         % Training information storeage
-%         prediction1 = [prediction1; x_bar]; % storage
+
         prediction1(pred1and2_counter : pred1and2_counter+1) = x_bar;
-        
-%         prediction2 = [prediction2; x_bar_prime];
-         prediction2(pred1and2_counter : pred1and2_counter+1) = x_bar_prime;
-        
-        pred1and2_counter = pred1and2_counter + 2;
-        
-%         modData = [modData; [x1; x2]];
-%         modData_real = [real(modData); imag(modData)];
-        
-%         recivedSymbols_test = [recivedSymbols_test; x_decoded_hat];
-%         X_decoded_total = [real(recivedSymbols_test); imag(recivedSymbols_test)];
+         prediction2(pred1and2_counter : pred1and2_counter+1) = x_bar_prime;     
+       pred1and2_counter = pred1and2_counter + 2;
+       
         
     end
     timerTemp = toc(tTesting);
     testingTime = [testingTime ; [snr , timerTemp ]];
     
     %% Convert back to bits
-%     modData
-%     length(modData)
-    
-    
+
     outputVector =  convertToBits(prediction1, numSymbols);
     numberOfBitErrors = sum(abs(outputVector -  data));
     BER = numberOfBitErrors/size(data,1)

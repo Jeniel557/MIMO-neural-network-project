@@ -12,7 +12,7 @@ trainingTimeNN2 = 0;
 testingTime = [];
 
 snrData = zeros(8,2);
-% snrData(3,:) = 4
+
 rx = 2;
 tx = 2;
 H_store = [];
@@ -91,7 +91,6 @@ T_counter = 1;
 H_counter = 1;
 X_counter = 1;
 
-% disp("-----------------------------------------------")
 
 H_store = zeros((xSize*2),1);
 Hstore_counter = 1;
@@ -145,24 +144,23 @@ for j = 1:2*symbolSize:length(data)
 end
 x_estimate_real = [round(real(recivedSymbols),5); round(imag(recivedSymbols),5)];
 
-display("end moduating data")
+display("end moduating data");
 
-display("Training nn1 ")
+display("Training nn1 ");
 tNN1 = tic;
 net = fitcnet(x_estimate_real, X_total_real,"LayerSizes",[10 10 10 10 6]);
 
-trainingTimeNN1 = toc(tNN1)
-display(trainingTimeNN1)
+trainingTimeNN1 = toc(tNN1);
+display("Time taken to train the first neural network is " + trainingTimeNN1+ " secs")
 
 input = [real(T_bar) ,imag(T_bar) , real(R_store), imag(R_store)];
-display("Training nn2 ")
+display("Training nn2 ");
 tnn2 = tic;
 CEnet = fitrnet(input, H_store,"LayerSizes",[10 10 10 ]);
 trainingTimeNN2 = toc(tnn2)
-display(trainingTimeNN2)
+display(trainingTimeNN2);
+display("Time taken to train the second neural network is "+trainingTimeNN2 + "secs")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% load net
-% load CEnet
 
 
 
@@ -174,11 +172,11 @@ BER_prediction3 = [];
 numBits = 40000; % set the number of bits for testing.
 pilotRecalculation = 100;
 xTestSize = (numBits/symbolSize);
-SNR = [1:2:30];
+SNR = [1:2:30]; % set the specific SNR values to add to the data for test
 
 for snr = SNR
     disp("-----------------------------------------------");
-    snr
+    display(snr);
     rng default
     hAWGN = comm.AWGNChannel(...
         'NoiseMethod','Signal to noise ratio (SNR)',...
@@ -237,10 +235,8 @@ for snr = SNR
     T_total_test = step(hAWGN,T_total_test);
     
     T_counter = 1;
-%     H_counter = 1;
     X_counter = 1;
     T1_counter = 1;
-%     T2_counter = 1;
     TransmissionCounter = 0;
   
    
